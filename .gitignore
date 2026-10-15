@@ -1,0 +1,10 @@
+# Caché de importación de Godot (se regenera sola al abrir el proyecto).
+.godot/
+
+# Binario exportado y paquete snap (se generan con scripts/snapcraft, no se versionan).
+build/
+*.snap
+
+# Capturas de depuración del smoke test.
+_shot*.png
+_shot*.png.import

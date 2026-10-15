@@ -1,0 +1,31 @@
+name: pinball-ultra
+version: '1.0'
+summary: Pinball vertical con ruleta, tragaperras y multibola, todo generado por código
+description: |
+  Pinball Ultra es una mesa de pinball vertical hecha en Godot: ruleta
+  europea real en el agujero central, tragaperras en el túnel superior,
+  rampa elevada, dianas abatibles, spinner, bola-save, tilt, multibola y
+  tabla de récords local con modo atracción. Todo el arte y el sonido se
+  generan por código en tiempo de ejecución, sin ficheros de imagen ni de
+  audio externos.
+
+base: core22
+confinement: strict
+grade: stable
+icon: snap/gui/icon.png
+
+architectures:
+  - build-on: amd64
+
+apps:
+  pinball-ultra:
+    command: PinballUltra.x86_64
+    extensions: [gnome]
+    plugs:
+      - audio-playback
+      - network
+
+parts:
+  game:
+    plugin: dump
+    source: build/linux
