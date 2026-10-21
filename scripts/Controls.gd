@@ -11,6 +11,16 @@ const DEFAULTS := {
 	"nudge": KEY_SHIFT,
 }
 
+## Botón de mando por acción (fijo, no se remapea desde el menú: solo las
+## teclas se remapean). Mismo botón en cualquier mando porque se referencia
+## por índice estándar (SDL/XInput), no por nombre de modelo.
+const JOYPAD_DEFAULTS := {
+	"flipper_left": JOY_BUTTON_LEFT_SHOULDER,
+	"flipper_right": JOY_BUTTON_RIGHT_SHOULDER,
+	"launch": JOY_BUTTON_A,
+	"nudge": JOY_BUTTON_B,
+}
+
 
 static func load_keys() -> Dictionary:
 	var keys: Dictionary = DEFAULTS.duplicate()

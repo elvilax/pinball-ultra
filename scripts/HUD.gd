@@ -141,7 +141,7 @@ func set_balls(value: int) -> void:
 
 
 func set_pot(value: int) -> void:
-	_pot.text = "Bote  %s" % format_number(value)
+	_pot.text = Lang.t("POT", [format_number(value)])
 
 
 ## Indicador de bola a salvo: cuenta atrás visible, parpadea en el último tramo.
@@ -150,7 +150,7 @@ func set_ball_save(remaining: float) -> void:
 		_ball_save.visible = false
 		return
 	_ball_save.visible = not (remaining < 3.0 and fmod(_time * 6.0, 1.0) < 0.5)
-	_ball_save.text = "BOLA A SALVO %ds" % int(ceil(remaining))
+	_ball_save.text = Lang.t("BALL_SAVE", [int(ceil(remaining))])
 
 
 func show_message(text: String) -> void:

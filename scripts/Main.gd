@@ -310,10 +310,10 @@ func _add_analog_finish() -> void:
 func _setup_input() -> void:
 	var keys := Controls.load_keys()
 	for action in keys.keys():
-		_add_action(action, [keys[action]])
+		_add_action(action, [keys[action]], Controls.JOYPAD_DEFAULTS.get(action, -1))
 
 
-func _add_action(action: String, keys: Array) -> void:
+func _add_action(action: String, keys: Array, joy_button: int = -1) -> void:
 	if InputMap.has_action(action):
 		return
 	InputMap.add_action(action)
@@ -321,6 +321,10 @@ func _add_action(action: String, keys: Array) -> void:
 		var event := InputEventKey.new()
 		event.physical_keycode = key
 		InputMap.action_add_event(action, event)
+	if joy_button >= 0:
+		var jb_event := InputEventJoypadButton.new()
+		jb_event.button_index = joy_button
+		InputMap.action_add_event(action, jb_event)
 
 
 func _add_flipper(pos: Vector2, side: float, action: String) -> void:
@@ -412,7 +416,7 @@ func _new_game() -> void:
 	_hud.set_balls(balls_left)
 	_hud.set_pot(pot)
 	_hud.set_ball_save(0.0)
-	_hud.show_message("Mantén ESPACIO para lanzar")
+	_hud.show_message(Lang.t("HOLD_LAUNCH"))
 
 
 ## Modo atracción: sin bola en juego, luces y animaciones de la mesa solas,
@@ -427,7 +431,7 @@ func _enter_attract() -> void:
 	_hud.set_score(0)
 	_hud.set_balls(0)
 	_hud.set_pot(POT_BASE)
-	_hud.show_message("PULSA ESPACIO PARA JUGAR  ·  ESC: CONTROLES")
+	_hud.show_message(Lang.t("ATTRACT_PROMPT"))
 	_highscore_ui.show_table(HighScores.load_scores())
 
 
@@ -470,7 +474,7 @@ func _nudge() -> void:
 		_trigger_tilt()
 	elif _tilt_meter >= TILT_WARN and not _tilt_warned:
 		_tilt_warned = true
-		_hud.announce("¡CUIDADO!", P.RED_DARK)
+		_hud.announce(Lang.t("WARNING"), P.RED_DARK)
 
 
 func _shake_camera() -> void:
@@ -493,7 +497,7 @@ func _trigger_tilt() -> void:
 	for f in _flippers:
 		f.enabled = false
 	_table.flash(1.0)
-	_hud.announce("¡TILT!", P.RED_DARK)
+	_hud.announce(Lang.t("TILT"), P.RED_DARK)
 	for ball in _balls.duplicate():
 		_remove_ball(ball, false)
 
@@ -520,7 +524,7 @@ func _award_extra_ball() -> void:
 	balls_left += 1
 	_hud.set_balls(balls_left)
 	_table.flash(1.5)
-	_hud.announce("¡BOLA EXTRA!", P.BRASS_DARK)
+	_hud.announce(Lang.t("EXTRA_BALL"), P.BRASS_DARK)
 
 
 func _on_launched(_power: float) -> void:
@@ -558,7 +562,7 @@ func _on_lanes_completed() -> void:
 	_add_score(LANES_BONUS)
 	_add_pot(pot)
 	_table.flash(1.5)
-	_hud.announce("¡BOTE x2!", P.BRASS_DARK)
+	_hud.announce(Lang.t("POT_X2"), P.BRASS_DARK)
 	_win_completions += 1
 	if not _multiball and _win_completions % WIN_FOR_MULTIBALL == 0:
 		_start_multiball()
@@ -569,7 +573,7 @@ func _on_skill_shot(at: Vector2) -> void:
 	_busy = true
 	_table.flash(1.2)
 	FloatingText.spawn(_world, at + Vector2(0, -70), "+%d" % SKILL_SHOT_POINTS, P.BRASS_DARK)
-	_hud.announce("¡TIRO MAESTRO!", P.BRASS_DARK)
+	_hud.announce(Lang.t("SKILL_SHOT"), P.BRASS_DARK)
 	_big_win.play(SKILL_SHOT_POINTS * (MULTIBALL_SCORE_MULT if _multiball else 1), 0, true)
 	await _big_win.finished
 	_add_score(SKILL_SHOT_POINTS)
@@ -586,7 +590,7 @@ func _on_drop_target_hit(points: int, at: Vector2) -> void:
 func _on_drop_targets_all_down() -> void:
 	_add_pot(pot)
 	_table.flash(1.5)
-	_hud.announce("¡DIANAS! BOTE x2", P.BRASS_DARK)
+	_hud.announce(Lang.t("TARGETS_POT_X2"), P.BRASS_DARK)
 
 
 func _on_fixed_target_scored(points: int, at: Vector2) -> void:
@@ -604,7 +608,7 @@ func _on_ramp_completed(at: Vector2) -> void:
 	var applied := _add_score(RAMP_POINTS)
 	_add_pot(POT_PER_RAMP)
 	_table.flash(1.2)
-	_hud.announce("¡RAMPA!", P.BRASS_DARK)
+	_hud.announce(Lang.t("RAMP_HIT"), P.BRASS_DARK)
 	_ball_ramps += 1
 	FloatingText.spawn(_world, at + Vector2(60, -60), "+%d" % applied, P.BRASS_DARK)
 
@@ -729,7 +733,7 @@ func _end_turn() -> void:
 		game_over = true
 		Sfx.play("game_over")
 		_launcher.enabled = false
-		_hud.announce("FIN", P.RED_DARK)
+		_hud.announce(Lang.t("GAME_OVER"), P.RED_DARK)
 		if HighScores.qualifies(score):
 			var initials: String = await _highscore_ui.enter_initials(score)
 			HighScores.insert(initials, score)
@@ -740,8 +744,8 @@ func _end_turn() -> void:
 		for f in _flippers:
 			f.enabled = true
 		_spawn_ball(Table.BALL_START)
-		_hud.announce("BOLA PERDIDA", P.RED_DARK)
-		_hud.show_message("MANTÉN ESPACIO PARA LANZAR")
+		_hud.announce(Lang.t("BALL_LOST"), P.RED_DARK)
+		_hud.show_message(Lang.t("HOLD_LAUNCH"))
 
 
 ## Recuento de bonus de la bola que se acaba de perder: rampas, bumpers,
@@ -750,18 +754,18 @@ func _end_turn() -> void:
 func _play_bonus() -> void:
 	var items := []
 	if _ball_ramps > 0:
-		items.append(["RAMPAS", _ball_ramps, BONUS_PER_RAMP])
+		items.append([Lang.t("BONUS_RAMPS"), _ball_ramps, BONUS_PER_RAMP])
 	if _ball_bumpers > 0:
-		items.append(["BUMPERS", _ball_bumpers, BONUS_PER_BUMPER])
+		items.append([Lang.t("BONUS_BUMPERS"), _ball_bumpers, BONUS_PER_BUMPER])
 	if _ball_targets > 0:
-		items.append(["DIANAS", _ball_targets, BONUS_PER_TARGET])
+		items.append([Lang.t("BONUS_TARGETS"), _ball_targets, BONUS_PER_TARGET])
 	if _ball_slot_wins > 0:
-		items.append(["TRAGAPERRAS", _ball_slot_wins, BONUS_PER_SLOT_WIN])
+		items.append([Lang.t("BONUS_SLOT"), _ball_slot_wins, BONUS_PER_SLOT_WIN])
 	if _ball_roulette_wins > 0:
-		items.append(["RULETAS", _ball_roulette_wins, BONUS_PER_ROULETTE_WIN])
+		items.append([Lang.t("BONUS_ROULETTE"), _ball_roulette_wins, BONUS_PER_ROULETTE_WIN])
 	if items.is_empty():
 		return
-	_hud.announce("BONUS", P.BRASS_DARK)
+	_hud.announce(Lang.t("BONUS"), P.BRASS_DARK)
 	await get_tree().create_timer(0.7).timeout
 	for item in items:
 		var label: String = item[0]
@@ -788,7 +792,7 @@ func _start_multiball() -> void:
 	_multiball = true
 	Sfx.play("multiball")
 	_table.flash(2.0)
-	_hud.announce("¡MULTIBOLA!", P.BRASS_DARK)
+	_hud.announce(Lang.t("MULTIBALL_START"), P.BRASS_DARK)
 	for i in MULTIBALL_EXTRA_BALLS:
 		var pos := Table.CENTER_ART + Vector2(randf_range(-80.0, 80.0), -260.0)
 		_spawn_ball(pos, Vector2(randf_range(-60.0, 60.0), 520.0))
@@ -798,4 +802,4 @@ func _end_multiball() -> void:
 	if not _multiball:
 		return
 	_multiball = false
-	_hud.announce("FIN MULTIBOLA", P.BRASS_DARK)
+	_hud.announce(Lang.t("MULTIBALL_END"), P.BRASS_DARK)

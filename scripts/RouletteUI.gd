@@ -10,9 +10,15 @@ const Roulette := preload("res://scripts/Roulette.gd")
 const CHOOSE_TIME := 5.0
 const RESULT_TIME := 1.9
 const PANEL := Rect2(60, 350, 960, 400)
-const NAMES := ["ROJO", "NEGRO", "VERDE"]
-const KEYS := ["Z  /  ←", "M  /  →", "ESPACIO"]
 const ACTIONS := ["flipper_left", "flipper_right", "launch"]
+
+
+func _names() -> Array:
+	return [Lang.t("ROULETTE_RED"), Lang.t("ROULETTE_BLACK"), Lang.t("ROULETTE_GREEN")]
+
+
+func _keys_hint() -> Array:
+	return ["Z  /  ←", "M  /  →", Lang.t("KEY_SPACE_LABEL")]
 
 enum { HIDDEN, CHOOSE, BET, RESULT }
 
@@ -110,36 +116,38 @@ func _draw_stage() -> void:
 	s.draw_rect(PANEL.grow(-14.0), P.RED_DARK)
 	s.draw_rect(PANEL.grow(-14.0), P.BRASS, false, 4.0)
 	var cx := PANEL.get_center().x
+	var names := _names()
 	match _mode:
 		CHOOSE:
-			_text(font, Vector2(cx, 440), "¡Haz tu apuesta!", 58, P.BRASS_LIGHT)
+			_text(font, Vector2(cx, 440), Lang.t("BET_PROMPT"), 58, P.BRASS_LIGHT)
+			var keys := _keys_hint()
 			for i in 3:
 				var c := Vector2(240.0 + i * 300.0, 570.0)
 				var selected := i == _choice
 				if selected and fmod(_time * 3.0, 1.0) < 0.6:
 					s.draw_circle(c, 92.0, P.BULB_ON)
 				_chip(c, 78.0, _colors()[i])
-				_text(font, c + Vector2(0, 12), NAMES[i], 30, P.CREAM)
-				_text(font, c + Vector2(0, 128), KEYS[i], 26, P.CREAM)
+				_text(font, c + Vector2(0, 12), names[i], 30, P.CREAM)
+				_text(font, c + Vector2(0, 128), keys[i], 26, P.CREAM)
 			# Cuenta atrás: número y barra.
 			var k := clampf(_time_left / CHOOSE_TIME, 0.0, 1.0)
 			_text(font, Vector2(PANEL.end.x - 90.0, 445), str(int(ceil(_time_left))), 64, P.BULB_ON)
 			s.draw_rect(Rect2(PANEL.position.x + 40.0, 722, (PANEL.size.x - 80.0) * k, 8), P.BULB_ON)
 		BET:
-			_text(font, Vector2(cx, 450), "Apuestas al", 50, P.CREAM)
+			_text(font, Vector2(cx, 450), Lang.t("BET_ON"), 50, P.CREAM)
 			_chip(Vector2(cx, 590), 84.0, _colors()[_choice])
-			_text(font, Vector2(cx, 603), NAMES[_choice], 32, P.CREAM)
-			_text(font, Vector2(cx, 722), "No va más…", 30, P.BRASS_LIGHT)
+			_text(font, Vector2(cx, 603), names[_choice], 32, P.CREAM)
+			_text(font, Vector2(cx, 722), Lang.t("NO_MORE_BETS"), 30, P.BRASS_LIGHT)
 		RESULT:
 			var c := Vector2(280, 550)
 			_chip(c, 132.0, _colors()[_color])
 			_text(font, c + Vector2(0, 52), str(_number), 150, P.CREAM)
-			_text(font, Vector2(690, 470), NAMES[_color], 76, P.CREAM)
+			_text(font, Vector2(690, 470), names[_color], 76, P.CREAM)
 			if _won:
 				var blink := fmod(_time * 5.0, 1.0) < 0.6
-				_text(font, Vector2(690, 580), "¡GANAS!", 80, P.BULB_ON if blink else P.BRASS)
+				_text(font, Vector2(690, 580), Lang.t("YOU_WIN"), 80, P.BULB_ON if blink else P.BRASS)
 			else:
-				_text(font, Vector2(690, 575), "Has fallado", 56, P.BRASS_LIGHT)
+				_text(font, Vector2(690, 575), Lang.t("YOU_LOSE"), 56, P.BRASS_LIGHT)
 			_text(font, Vector2(690, 680), "+%s" % _format(_prize), 60, P.CREAM)
 
 

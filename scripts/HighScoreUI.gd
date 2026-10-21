@@ -99,14 +99,14 @@ func _draw_stage() -> void:
 	s.draw_rect(PANEL.grow(-14.0), P.BRASS, false, 4.0)
 	var cx := PANEL.get_center().x
 	if _mode == TABLE:
-		_text(font, Vector2(cx, PANEL.position.y + 90), "RÉCORDS", 64, P.BRASS_LIGHT)
+		_text(font, Vector2(cx, PANEL.position.y + 90), Lang.t("RECORDS_TITLE"), 64, P.BRASS_LIGHT)
 		for i in _scores.size():
 			var e = _scores[i]
 			var y := PANEL.position.y + 210 + i * 90
 			var line := "%d.   %s   %s" % [i + 1, String(e["initials"]), HUD.format_number(int(e["score"]))]
 			_text(font, Vector2(cx, y), line, 42, P.CREAM)
 	elif _mode == ENTRY:
-		_text(font, Vector2(cx, PANEL.position.y + 90), "¡NUEVO RÉCORD!", 54, P.BULB_ON)
+		_text(font, Vector2(cx, PANEL.position.y + 90), Lang.t("NEW_RECORD"), 54, P.BULB_ON)
 		_text(font, Vector2(cx, PANEL.position.y + 170), HUD.format_number(_entry_score), 50, P.CREAM)
 		for i in 3:
 			var c := Vector2(cx - 180.0 + i * 180.0, PANEL.position.y + 380)
@@ -116,7 +116,7 @@ func _draw_stage() -> void:
 			if show_letter:
 				var letter: String = LETTERS[_letters[i]] if i <= _slot else "."
 				_text(font, c + Vector2(0, 20), letter, 80, P.BULB_ON if i == _slot else P.CREAM)
-		_text(font, Vector2(cx, PANEL.position.y + 520), "Z/← y M/→ cambian la letra · ESPACIO confirma", 28, P.BRASS_LIGHT)
+		_text(font, Vector2(cx, PANEL.position.y + 520), Lang.t("INITIALS_HINT"), 28, P.BRASS_LIGHT)
 
 
 func _text(font: Font, center: Vector2, text: String, size: int, color: Color) -> void:
