@@ -20,11 +20,12 @@ const LABEL_KEYS := {
 const ROW_MUSIC := 4
 const ROW_SFX := 5
 const ROW_LANG := 6
-const ROW_CREDITS := 7
-const ROW_RESET := 8
-const ROW_QUIT := 9
-const ROW_CLOSE := 10
-const ROW_COUNT := 11
+const ROW_ACHIEVEMENTS := 7
+const ROW_CREDITS := 8
+const ROW_RESET := 9
+const ROW_QUIT := 10
+const ROW_CLOSE := 11
+const ROW_COUNT := 12
 const VOLUME_STEP := 0.1
 
 ## Botón de mando (índice 0) equivalente a cada tecla de navegación del menú.
@@ -35,7 +36,7 @@ const JOY_RIGHT := JOY_BUTTON_DPAD_RIGHT
 const JOY_ACCEPT := JOY_BUTTON_A
 const JOY_BACK := JOY_BUTTON_START
 
-enum { HIDDEN, MENU, REMAP, CREDITS }
+enum { HIDDEN, MENU, REMAP, CREDITS, ACHIEVEMENTS }
 
 var _mode := HIDDEN
 var _stage: Control
@@ -95,7 +96,7 @@ func _close() -> void:
 
 ## Botón de atrás (ESC desde Main): cancela el remapeo/créditos en curso o cierra el menú.
 func _back() -> void:
-	if _mode == REMAP or _mode == CREDITS:
+	if _mode == REMAP or _mode == CREDITS or _mode == ACHIEVEMENTS:
 		_mode = MENU
 	elif _mode == MENU:
 		_close()
@@ -156,6 +157,9 @@ func _activate_selected() -> void:
 		_time = 0.0
 	elif _selected == ROW_LANG:
 		Lang.cycle_lang(1)
+	elif _selected == ROW_ACHIEVEMENTS:
+		_mode = ACHIEVEMENTS
+		_time = 0.0
 	elif _selected == ROW_CREDITS:
 		_mode = CREDITS
 		_time = 0.0
@@ -185,7 +189,7 @@ func _input(event: InputEvent) -> void:
 				_apply_action_keymap(_remap_action, event.physical_keycode)
 				_mode = MENU
 		return
-	if _mode == CREDITS:
+	if _mode == CREDITS or _mode == ACHIEVEMENTS:
 		if (event is InputEventKey and event.pressed and not event.echo) \
 				or (event is InputEventJoypadButton and event.pressed):
 			get_viewport().set_input_as_handled()
@@ -230,6 +234,7 @@ func _draw_stage() -> void:
 		_draw_volume_row(font, _row_y(ROW_MUSIC), Lang.t("MUSIC_VOLUME"), Sfx.music_volume, _selected == ROW_MUSIC)
 		_draw_volume_row(font, _row_y(ROW_SFX), Lang.t("SFX_VOLUME"), Sfx.sfx_volume, _selected == ROW_SFX)
 		_text(font, Vector2(cx, _row_y(ROW_LANG)), "%s   [ %s ]" % [Lang.t("LANGUAGE_ROW"), Lang.LANG_NAMES[Lang.lang]], 34, P.BULB_ON if _selected == ROW_LANG else P.CREAM)
+		_text(font, Vector2(cx, _row_y(ROW_ACHIEVEMENTS)), Lang.t("ACHIEVEMENTS_ROW"), 34, P.BULB_ON if _selected == ROW_ACHIEVEMENTS else P.CREAM)
 		_text(font, Vector2(cx, _row_y(ROW_CREDITS)), Lang.t("CREDITS_ROW"), 34, P.BULB_ON if _selected == ROW_CREDITS else P.CREAM)
 		_text(font, Vector2(cx, _row_y(ROW_RESET)), Lang.t("RESET_DEFAULTS"), 34, P.BULB_ON if _selected == ROW_RESET else P.CREAM)
 		_text(font, Vector2(cx, _row_y(ROW_QUIT)), Lang.t("QUIT_GAME"), 34, P.BULB_ON if _selected == ROW_QUIT else P.CREAM)
@@ -248,6 +253,41 @@ func _draw_stage() -> void:
 		_text(font, Vector2(cx, PANEL.position.y + 490), Lang.t("CREDITS_ENGINE"), 34, P.BRASS_LIGHT)
 		_text(font, Vector2(cx, PANEL.position.y + 560), Lang.t("CREDITS_ART_AUDIO"), 34, P.BRASS_LIGHT)
 		_text(font, Vector2(cx, PANEL.position.y + PANEL.size.y - 60), Lang.t("ESC_BACK"), 26, P.BRASS_LIGHT)
+	elif _mode == ACHIEVEMENTS:
+		var order: Array = Achievements.ORDER
+		var row_h: float = (PANEL.size.y - 260.0) / order.size()
+		for i in order.size():
+			var id: String = order[i]
+			var y := PANEL.position.y + 160.0 + i * row_h
+			_draw_achievement_row(font, y, id)
+		_text(font, Vector2(cx, PANEL.position.y + PANEL.size.y - 60), Lang.t("ESC_BACK"), 26, P.BRASS_LIGHT)
+
+
+## Una fila: medallita (dorada si está desbloqueado, apagada si no), título y progreso.
+func _draw_achievement_row(font: Font, y: float, id: String) -> void:
+	var done := Achievements.is_unlocked(id)
+	var def: Dictionary = Achievements.DEFS[id]
+	var left := PANEL.position.x + 50.0
+	var medal_c := Vector2(left + 24.0, y + 26.0)
+	_stage.draw_circle(medal_c, 22.0, P.BRASS_DARK if done else P.WOOD_DARK)
+	_stage.draw_circle(medal_c, 16.0, P.BULB_ON if done else P.BLACK)
+	var text_x := left + 60.0
+	var title_text: String = Lang.t(def["title"]) if done else "???"
+	var title_color := P.BULB_ON if done else P.BRASS_LIGHT.darkened(0.3)
+	_stage.draw_string_outline(font, Vector2(text_x, y + 14.0), title_text, HORIZONTAL_ALIGNMENT_LEFT, 560.0, 32, 7, P.BLACK)
+	_stage.draw_string(font, Vector2(text_x, y + 14.0), title_text, HORIZONTAL_ALIGNMENT_LEFT, 560.0, 32, title_color)
+	var desc_text: String = Lang.t(def["desc"]) if done else Lang.t("ACH_LOCKED")
+	_stage.draw_string_outline(font, Vector2(text_x, y + 42.0), desc_text, HORIZONTAL_ALIGNMENT_LEFT, 560.0, 22, 6, P.BLACK)
+	_stage.draw_string(font, Vector2(text_x, y + 42.0), desc_text, HORIZONTAL_ALIGNMENT_LEFT, 560.0, 22, P.CREAM)
+	var prog: Array = Achievements.progress(id)
+	var right := PANEL.end.x - 60.0
+	var count_text: String = "%d/%d" % [prog[0], prog[1]]
+	# Sin ancho fijo (-1): con ancho, draw_string recorta el texto que no cabe
+	# en vez de solo alinearlo, así que aquí se mide y se posiciona a mano.
+	var count_w: float = font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+	var count_pos := Vector2(right - count_w, y + 28.0)
+	_stage.draw_string_outline(font, count_pos, count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 7, P.BLACK)
+	_stage.draw_string(font, count_pos, count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, P.BRASS_LIGHT)
 
 
 func _row_y(row: int) -> float:

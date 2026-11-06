@@ -143,6 +143,7 @@ func _build(name: String) -> AudioStreamWAV:
 		"roulette_drop": return _tone(300.0, 170.0, 0.12, "sine", 18.0)
 		"roulette_lose": return _tone(220.0, 100.0, 0.2, "square", 10.0, 0.3)
 		"jackpot": return _chord([523.25, 659.25, 784.0, 1046.5], 0.4)
+		"achievement": return _chime([659.25, 784.0, 987.77, 1318.5], 0.07)
 		"slot_loop": return _slot_music()
 	return _tone(440.0, 440.0, 0.05, "sine", 30.0)
 

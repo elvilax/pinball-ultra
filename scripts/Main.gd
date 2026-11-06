@@ -27,6 +27,7 @@ const HighScores := preload("res://scripts/HighScores.gd")
 const HighScoreUI := preload("res://scripts/HighScoreUI.gd")
 const Controls := preload("res://scripts/Controls.gd")
 const SettingsUI := preload("res://scripts/SettingsUI.gd")
+const AchievementToast := preload("res://scripts/AchievementToast.gd")
 
 const WORLD_SIZE := Vector2i(1080, 1920)
 const BALLS_PER_GAME := 3
@@ -139,6 +140,8 @@ var _tilt_warned := false
 var _tilted := false
 var _win_completions := 0
 var _multiball := false
+## Para el logro "Mano firme": si la partida entera pasa sin ningún TILT.
+var _game_tilted_ever := false
 
 ## Fase 6: bonus de bola, récords y modo atracción.
 var _highscore_ui: CanvasLayer
@@ -246,6 +249,8 @@ func _ready() -> void:
 
 	_settings_ui = SettingsUI.new()
 	add_child(_settings_ui)
+
+	add_child(AchievementToast.new())
 
 	_add_analog_finish()
 
@@ -403,7 +408,9 @@ func _new_game() -> void:
 	_tilt_meter = 0.0
 	_tilt_warned = false
 	_ball_save_timer = 0.0
+	_game_tilted_ever = false
 	_reset_ball_bonus()
+	Achievements.add("games_played")
 	for f in _flippers:
 		f.enabled = true
 	for ball in _balls.duplicate():
@@ -492,6 +499,7 @@ func _trigger_tilt() -> void:
 		return
 	_tilted = true
 	_tilt_warned = true
+	_game_tilted_ever = true
 	_ball_save_timer = 0.0
 	Sfx.play("tilt")
 	for f in _flippers:
@@ -508,6 +516,7 @@ func _add_score(points: int) -> int:
 	var applied := points * MULTIBALL_SCORE_MULT if _multiball else points
 	score += applied
 	_hud.set_score(score)
+	Achievements.set_stat_max("score", score)
 	if not _extra_ball_awarded and score >= EXTRA_BALL_SCORE:
 		_award_extra_ball()
 	return applied
@@ -520,6 +529,7 @@ func _add_pot(amount: int) -> void:
 
 func _award_extra_ball() -> void:
 	Sfx.play("extra_ball")
+	Achievements.add("extra_balls")
 	_extra_ball_awarded = true
 	balls_left += 1
 	_hud.set_balls(balls_left)
@@ -550,6 +560,7 @@ func _on_bumper_scored(points: int, at: Vector2, color: Color) -> void:
 	_add_pot(POT_PER_BUMPER)
 	_table.flash(0.5)
 	_ball_bumpers += 1
+	Achievements.add("bumpers")
 	FloatingText.spawn(_world, at + Vector2(0, -70), "+%d" % applied, color.darkened(0.4))
 
 
@@ -571,6 +582,7 @@ func _on_lanes_completed() -> void:
 ## Tiro maestro: la bola entró por la letra que estaba encendida al lanzar.
 func _on_skill_shot(at: Vector2) -> void:
 	_busy = true
+	Achievements.add("skill_shots")
 	_table.flash(1.2)
 	FloatingText.spawn(_world, at + Vector2(0, -70), "+%d" % SKILL_SHOT_POINTS, P.BRASS_DARK)
 	_hud.announce(Lang.t("SKILL_SHOT"), P.BRASS_DARK)
@@ -591,6 +603,7 @@ func _on_drop_targets_all_down() -> void:
 	_add_pot(pot)
 	_table.flash(1.5)
 	_hud.announce(Lang.t("TARGETS_POT_X2"), P.BRASS_DARK)
+	Achievements.add("targets_cleared")
 
 
 func _on_fixed_target_scored(points: int, at: Vector2) -> void:
@@ -610,6 +623,7 @@ func _on_ramp_completed(at: Vector2) -> void:
 	_table.flash(1.2)
 	_hud.announce(Lang.t("RAMP_HIT"), P.BRASS_DARK)
 	_ball_ramps += 1
+	Achievements.add("ramps")
 	FloatingText.spawn(_world, at + Vector2(60, -60), "+%d" % applied, P.BRASS_DARK)
 
 
@@ -627,6 +641,7 @@ func _on_tunnel_entered(tunnel: Area2D, _captured_ball: RigidBody2D) -> void:
 		_ball_slot_wins += 1
 	if matches == 3:
 		# Tres iguales: se lleva el bote entero con la animación gorda.
+		Achievements.add("jackpots")
 		var amount: int = pot * tunnel.multiplier
 		pot = POT_BASE
 		_hud.set_pot(pot)
@@ -667,6 +682,8 @@ func _on_roulette_captured(_ball: RigidBody2D) -> void:
 	var won := color == choice
 	if won:
 		_ball_roulette_wins += 1
+		if color == Roulette.GREEN:
+			Achievements.add("roulette_greens")
 	var prize: int
 	if won:
 		prize = pot * (ROULETTE_GREEN_MULTIPLIER if color == Roulette.GREEN else 1)
@@ -734,7 +751,10 @@ func _end_turn() -> void:
 		Sfx.play("game_over")
 		_launcher.enabled = false
 		_hud.announce(Lang.t("GAME_OVER"), P.RED_DARK)
+		if not _game_tilted_ever:
+			Achievements.add("no_tilt_games")
 		if HighScores.qualifies(score):
+			Achievements.add("hof_entries")
 			var initials: String = await _highscore_ui.enter_initials(score)
 			HighScores.insert(initials, score)
 		_enter_attract()
@@ -790,6 +810,7 @@ func _spawn_ball(pos: Vector2, velocity := Vector2.ZERO) -> RigidBody2D:
 ## Completar W-I-N las veces que toque suelta 2 bolas más; mientras dure, los premios valen el doble.
 func _start_multiball() -> void:
 	_multiball = true
+	Achievements.add("multiballs")
 	Sfx.play("multiball")
 	_table.flash(2.0)
 	_hud.announce(Lang.t("MULTIBALL_START"), P.BRASS_DARK)

@@ -17,6 +17,7 @@ boot_splash/bg_color=Color(0.17, 0.1, 0.055, 1)
 
 Sfx="*res://scripts/Sfx.gd"
 Lang="*res://scripts/Lang.gd"
+Achievements="*res://scripts/Achievements.gd"
 
 [display]
 
