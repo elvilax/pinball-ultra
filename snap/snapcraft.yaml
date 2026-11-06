@@ -1,5 +1,6 @@
 name: pinball-ultra
-version: '1.1'
+version: '1.2'
+license: MIT
 summary: Pinball vertical con ruleta, tragaperras y multibola, todo generado por código
 description: |
   Pinball Ultra es una mesa de pinball vertical hecha en Godot: ruleta
