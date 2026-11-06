@@ -28,6 +28,7 @@ const HighScoreUI := preload("res://scripts/HighScoreUI.gd")
 const Controls := preload("res://scripts/Controls.gd")
 const SettingsUI := preload("res://scripts/SettingsUI.gd")
 const AchievementToast := preload("res://scripts/AchievementToast.gd")
+const LangPicker := preload("res://scripts/LangPicker.gd")
 
 const WORLD_SIZE := Vector2i(1080, 1920)
 const BALLS_PER_GAME := 3
@@ -253,6 +254,14 @@ func _ready() -> void:
 	add_child(AchievementToast.new())
 
 	_add_analog_finish()
+
+	if Lang.is_first_run():
+		var picker := LangPicker.new()
+		add_child(picker)
+		get_tree().paused = true
+		await picker.chosen
+		get_tree().paused = false
+		picker.queue_free()
 
 	_enter_attract()
 

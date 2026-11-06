@@ -7,7 +7,7 @@ const PATH := "user://lang.json"
 const LANGS := ["es", "en", "ca"]
 const LANG_NAMES := {"es": "ESPAÑOL", "en": "ENGLISH", "ca": "CATALÀ"}
 
-var lang := "es"
+var lang := "en"
 
 const STRINGS := {
 	"POT": {"es": "Bote  %s", "en": "Pot  %s", "ca": "Bot  %s"},
@@ -120,6 +120,11 @@ func set_lang(new_lang: String) -> void:
 func cycle_lang(dir: int) -> void:
 	var i := LANGS.find(lang)
 	set_lang(LANGS[posmod(i + dir, LANGS.size())])
+
+
+## True si nunca se ha guardado un idioma (primer arranque del juego).
+func is_first_run() -> bool:
+	return not FileAccess.file_exists(PATH)
 
 
 func _load() -> void:

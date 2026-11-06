@@ -48,4 +48,4 @@ its own script/scene, `Sfx.gd` synthesizes all audio procedurally, and
 
 ## License
 
-All rights reserved.
+MIT License — see [LICENSE](LICENSE).
